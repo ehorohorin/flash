@@ -5,6 +5,7 @@ import os
 from flask import flash, redirect, url_for
 from werkzeug.utils import secure_filename
 from flask import send_from_directory
+from flask.ext.sqlalchemy import SQLAlchemy
 from os.path import isfile, join
 
 ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
