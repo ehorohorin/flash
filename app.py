@@ -76,19 +76,29 @@ def tasks():
 def add_problem():
     if request.method == 'POST':
         problem = Problem(votes = 0, description=request.form['description'])
+        db.session.add(problem)
+
+        db.session.flush()
+        db.session.refresh(problem)
+        print(problem.id)
         if 'file' not in request.files:
-            flash('No file part')
+            print('No file part')
             return redirect(request.url)
         file = request.files['file']
         if file.filename == '':
-            flash('No selected file')
+            print('No selected file')
             return redirect(request.url)
         if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
+            filename = secure_filename(f"problem_{problem.id}_.{file.filename.split('.')[1]}")
+
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            return redirect(url_for('upload_image',
-                                    filename=filename))
-        db.session.add(problem)
+            # return redirect(url_for('upload_image',
+            #                         filename=filename))
+
+        problem.image = filename
+        print(problem.image)
+        # db.session.add(problem)
+        # db.session.refresh(problem)
         db.session.commit()
         problems = Problem.query.all()
         return render_template('index.html', problems=problems)

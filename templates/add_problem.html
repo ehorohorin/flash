@@ -1,11 +1,11 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<form method="post">
+<form method="post" enctype=multipart/form-data>
     <label for="description">Описание</label>
     <input name="description" id="description" required>
-    <label for="image">Фото</label>
-    <input name="image" id="image" required>
+    <label for="file">Фото</label>
+    <input type="file" name="file">
     <input type="submit" value="Добавить">
 </form>
 {% endblock %}
