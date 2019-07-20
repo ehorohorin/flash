@@ -11,13 +11,14 @@
     <div class="card mb-4 shadow-sm">
          <img src="/uploads/{{problem.image}}" width="100%" height="100%">
         <div class="card-body">
-            <p class="card-text">{{problem.description}}</p>
+            <p class="card-text"><a href="{{url_for('problem_page',problem_id=problem.id)}}">{{problem.short_name}}</a></p>
+            <p>{{problem.description[:130]}}</p>
             <div class="d-flex justify-content-between align-items-center">
                 <div class="btn-group">
-                    <button type="button" class="btn btn-sm btn-outline-secondary">Да</button>
-                    <button type="button" class="btn btn-sm btn-outline-secondary">Нет</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary">
+                        <a  href="{{url_for('upvote',problem_id=problem.id)}}">Палец вверх</a></button>
                 </div>
-                <small class="text-muted">Решается за 3 дня</small>
+                <small class="text-muted">Голосов: {{problem.votes}}</small>
             </div>
         </div>
     </div>
