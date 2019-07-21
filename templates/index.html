@@ -16,7 +16,7 @@
                 <div class="container">
                     <div class="row">
                         <div class="col-5" align="left">
-                            {% if request.cookies.get('registered')%}
+                            {% if request.cookies.get('register')%}
 
 
                             <a href="{{url_for('upvote',problem_id=problem.id)}}"><img src="/uploads/like.png"></a>
