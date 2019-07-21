@@ -7,27 +7,31 @@
 
 
             {% for problem in problems %}
-<div class="row">
-<div class="col-md-8">
-    <div class="card mb-4 shadow-sm">
-         <img src="/uploads/{{problem.image}}" width="100%" height="100%">
-                  <div class="container-fluid px-lg-6" align="left">
-	      <a href="{{url_for('upvote',problem_id=problem.id)}}">	
-              <img src="/uploads/like.png">
-	      </a>
-              <img src="/uploads/message.jpg">
-              <img src="/uploads/map.png">
-	      <div>
-                <small class="text-muted" align="right">Голосов: {{problem.votes}}</small>
-	      </div>
-  </div>
-        <div class="card-body">
-            <p class="card-text"><a href="{{url_for('problem_page',problem_id=problem.id)}}">{{problem.short_name}}</a></p>
-            <p>{{problem.description[:130]}}</p>
+<div class="row py-3">
+    <div class="col">
+        <div class="card sm-2 shadow-sm">
+            <div class="col sm-4">
+                <img src="/uploads/{{problem.image}}" width="100%" height="100%">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-md-4" align="left">
+                            <a href="{{url_for('upvote',problem_id=problem.id)}}"><img src="/uploads/like.png"></a>
+                            <img src="/uploads/message.jpg">
+                            <img src="/uploads/map.png">
+                        </div>
+                        <div class="col-md-4 offset-md-4" align="right">
+                            <span style=""  class="text">Голосов: {{problem.votes}}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <p class="card-text" align="left">
+                    <a href="{{url_for('problem_page',problem_id=problem.id)}}">{{problem.short_name}}</a></p>
+                <p align="left">{{problem.description[:130]}}</p>
+            </div>
         </div>
-
     </div>
-</div>
 </div>
 {% endfor %}
 
