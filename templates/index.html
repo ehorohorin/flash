@@ -16,7 +16,11 @@
                 <div class="container">
                     <div class="row">
                         <div class="col-5" align="left">
+                            {% if request.cookies.get('registered')%}
+
+
                             <a href="{{url_for('upvote',problem_id=problem.id)}}"><img src="/uploads/like.png"></a>
+                            {% endif %}
                             <img src="/uploads/message.jpg">
                             <img src="/uploads/map.png"  data-toggle="collapse" href="#collapseExample" role="button" aria-expanded="false" aria-controls="collapseExample">
                          <div class="collapse" id="collapseExample">

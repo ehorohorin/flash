@@ -123,3 +123,9 @@ def main_page():
     problems = Problem.query.all()
     problems = sorted(problems, key=lambda problem: problem.votes, reverse=True)
     return render_template('index.html', problems=problems)
+@app.route('/register', methods=['POST', 'GET'])
+def register():
+    if request.method == 'POST':
+        request.set_cookie('register', 'registered')
+        return main_page()
+    return render_template('register.html')
