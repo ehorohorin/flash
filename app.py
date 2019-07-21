@@ -126,9 +126,7 @@ def main_page():
 @app.route('/register', methods=['POST', 'GET'])
 def register():
     if request.method == 'POST':
-        problems = Problem.query.all()
-        problems = sorted(problems, key=lambda problem: problem.votes, reverse=True)
-        resp = make_response(render_template('index.html', problems=problems))
+        resp = redirect("/", code=302)
         resp.set_cookie('register', 'registered')
         return resp
     return render_template('register.html')
