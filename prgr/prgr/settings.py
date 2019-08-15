@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'city_problems'
 ]
 
 MIDDLEWARE = [
@@ -119,4 +120,4 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-AUTH_USER_MODEL = 'city_problems.MyUser'
+AUTH_USER_MODEL = 'city_problems.user'
