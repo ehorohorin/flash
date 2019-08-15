@@ -1,0 +1,10 @@
+<h1>Problems</h1>
+<ul>
+{% for problem in object_list %}
+    <li>{{ problem.short_name}} - {{ problem.author_id }}</li>
+    <p>{{ problem.description}}</p>
+    <img src="/{{problem.image}}">
+{% empty %}
+    <li>No articles yet.</li>
+{% endfor %}
+</ul>
