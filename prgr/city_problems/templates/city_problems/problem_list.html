@@ -3,7 +3,7 @@
 {% for problem in object_list %}
     <li>{{ problem.short_name}} - {{ problem.author_id }}</li>
     <p>{{ problem.description}}</p>
-    <img src="/{{problem.image}}">
+    <img src="{{MEDIA_URL}}{{problem.image}}" style="width: 20%; height: 20%">
 {% empty %}
     <li>No articles yet.</li>
 {% endfor %}
