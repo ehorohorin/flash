@@ -1,3 +1,5 @@
+{% extends "city_problems/main_template.html" %}
+{% block content %}
 <h1>Problems</h1>
 <ul>
 {% for problem in object_list %}
@@ -8,3 +10,4 @@
     <li>No articles yet.</li>
 {% endfor %}
 </ul>
+{% endblock %}
