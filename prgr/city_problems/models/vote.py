@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.db import models
 
-from prgr.city_problems.models import Problem
+from .problem import Problem
 
 
 class Vote(models.Model):
@@ -10,7 +10,7 @@ class Vote(models.Model):
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
     )
-    problem = models.ForeignKey(Problem, on_delete=models.CASCADE())
+    problem = models.ForeignKey(Problem, on_delete=models.CASCADE)
 
     def __str__(self):
         return f"{self.problem.short_name}  {self.user.name}"

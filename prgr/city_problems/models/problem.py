@@ -1,7 +1,7 @@
 from django.db import models
 
 from django.conf import settings
-from . import Status
+from .status import Status
 
 
 class Problem(models.Model):
