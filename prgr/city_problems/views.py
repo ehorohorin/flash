@@ -17,7 +17,8 @@ class ProblemListView(ListView):
 
 
 from .forms import ContactForm
-from django.views.generic.edit import FormView
+from django.views.generic.edit import FormView, CreateView
+
 
 class ContactView(FormView):
     template_name = 'contact.html'
@@ -29,3 +30,7 @@ class ContactView(FormView):
         # It should return an HttpResponse.
         form.send_email()
         return super().form_valid(form)
+
+class ProblemCreate(CreateView):
+    model = Problem
+    fields = ['short_name', 'description', 'image']
