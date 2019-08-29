@@ -8,15 +8,23 @@
 <header>
     <nav>
         <ul>
-            <li>Главная</li>
-            <li>Добавить проблему</li>
-            <li>Профиль</li>
-            <li>Выйти</li>
+            <a href="">
+                <li>Главная</li>
+            </a>
+            <a href="">
+                <li>Добавить проблему</li>
+            </a>
+            <a href="">
+                <li>Профиль</li>
+            </a>
+            <a href="">
+                <li>Выйти</li>
+            </a>
         </ul>
     </nav>
 </header>
 <main>
-    {% block content %}{% endblock %}
+    <div>{% block content %}{% endblock %}</div>
 </main>
 <footer>
     <p>Добавил проблему - решил проблему</p>
