@@ -6,4 +6,5 @@ class User(AbstractUser):
     problems = models.ForeignKey(
         Problem,
         on_delete=models.CASCADE,
+        null=True
     )

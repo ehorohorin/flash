@@ -6,7 +6,7 @@ from .status import Status
 
 class Problem(models.Model):
     creation_date = models.DateTimeField()
-    status = models.ForeignKey(Status, on_delete=models.CASCADE)
+    status = models.ForeignKey(Status, on_delete=models.CASCADE, null=True)
     image = models.ImageField() #TODO production ready deployment - nginx
     short_name = models.CharField(max_length=140)
     description = models.CharField(max_length=3000)
