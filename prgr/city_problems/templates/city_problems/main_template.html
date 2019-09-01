@@ -8,16 +8,16 @@
 <header>
     <nav>
         <ul>
-            <a href="">
+            <a href="{% url 'city:index_list' %}">
                 <li>Главная</li>
             </a>
-            <a href="">
+            <a href="{% url 'city:create_problem' %}">
                 <li>Добавить проблему</li>
             </a>
-            <a href="">
+            <a href="{% url 'city:user_profile' %}">
                 <li>Профиль</li>
             </a>
-            <a href="">
+            <a href="{% url 'city:logout' %}">
                 <li>Выйти</li>
             </a>
         </ul>
