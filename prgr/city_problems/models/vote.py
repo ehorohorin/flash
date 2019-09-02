@@ -13,4 +13,4 @@ class Vote(models.Model):
     problem = models.ForeignKey(Problem, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"{self.problem.short_name}  {self.user.name}"
+        return f"{self.problem.short_name}  {self.user.username}"
