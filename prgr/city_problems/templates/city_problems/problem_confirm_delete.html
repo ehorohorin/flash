@@ -1,0 +1,16 @@
+{% extends "city_problems/main_template.html" %}
+{% block content %}
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <h1>Уверены, что хотите удалить проблему?</h1>
+        <input type="submit" value="Да, удалить">
+    <article>
+        <h2><a href="{% url 'city:problem_detail' problem.id %}">{{ problem.short_name }}</a></h2>
+        <p>{{ problem.description }}</p>
+        <img src="{{ MEDIA_URL }}{{ problem.image }}" style="width: 20%; height: 20%">
+        <p>{{ problem.creation_date }}</p>
+        <p>{{ problem.status }}</p>
+    </article>
+
+</form>
+{% endblock %}
