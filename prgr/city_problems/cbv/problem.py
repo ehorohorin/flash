@@ -3,6 +3,9 @@ from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.utils.datetime_safe import datetime
 from django.views.generic import ListView, CreateView, DetailView, UpdateView, DeleteView
+
+# noinspection PyUnresolvedReferences
+from city_problems.models import Comment
 from ..models import Problem
 
 class ProblemListView(ListView):
@@ -23,6 +26,14 @@ class ProblemCreate(CreateView):
 
 class ProblemDetail(DetailView):
     model = Problem
+
+    def get_context_data(self, **kwargs):
+        # Call the base implementation first to get a context
+        context = super().get_context_data(**kwargs)
+        # Add in a QuerySet of all the books
+        context['comments'] = Comment.objects.filter(problem__id=self.kwargs['pk'])
+
+        return context
 
 class ProblemUpdate(LoginRequiredMixin, UpdateView):
     model = Problem

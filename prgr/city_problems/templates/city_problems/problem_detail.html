@@ -11,4 +11,14 @@
             <a href="{% url 'city:problem_delete' problem.id %}">Удалить</a></p>
     </article>
 
+    <div>
+        {% for comment in comments %}
+    <article>
+            <p>{{ comment.text }}</p>
+            <p>{{ comment.date_created }}</p>
+    </article>
+{% empty %}
+    <h2>У этой проблемы еще не комментариев</h2>
+{% endfor %}
+    </div>
 {% endblock %}
