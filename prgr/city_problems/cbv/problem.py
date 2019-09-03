@@ -1,3 +1,4 @@
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.utils.datetime_safe import datetime
@@ -23,10 +24,10 @@ class ProblemCreate(CreateView):
 class ProblemDetail(DetailView):
     model = Problem
 
-class ProblemUpdate(UpdateView):
+class ProblemUpdate(LoginRequiredMixin, UpdateView):
     model = Problem
     fields = ['short_name', 'description', 'image', 'status', 'creation_date']
 
-class ProblemDelete(DeleteView):
+class ProblemDelete(LoginRequiredMixin, DeleteView):
     model = Problem
     success_url = reverse_lazy('city:index_list')

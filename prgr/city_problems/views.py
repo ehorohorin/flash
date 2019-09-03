@@ -15,4 +15,9 @@ class ProblemListView(ListView):
         context['now'] = timezone.now()
         return context
 
+def test_request(request):
+    string = ""
+    for key, value in request.headers.items():
+        string += f"<p>{key}-{value}</p>"
 
+    return HttpResponse(string)
