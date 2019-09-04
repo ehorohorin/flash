@@ -22,6 +22,24 @@ class ProblemCreate(CreateView):
         form.instance.creation_date = datetime.now()
         return super().form_valid(form)
 
+#добавить форму в view
+#форма добавления коментария
+# в action прописать адрес view для добавления коментария. CommentCreate, get - None
+# в ProblemDetail добавить обвес для создания коментария
+    # код форма от модели, миксин для создания коментария?
+from django.forms import ModelForm, Textarea, models, HiddenInput
+
+
+class CommentForm(ModelForm):
+
+    class Meta:
+        model = Comment
+        fields = ['text', 'problem']
+        widgets = {
+            'text': Textarea(attrs={'cols': 100, 'rows': 4}),
+            'problem': HiddenInput()
+        }
+
 
 
 class ProblemDetail(DetailView):
@@ -32,7 +50,7 @@ class ProblemDetail(DetailView):
         context = super().get_context_data(**kwargs)
         # Add in a QuerySet of all the books
         context['comments'] = Comment.objects.filter(problem__id=self.kwargs['pk'])
-
+        context['form'] = CommentForm(initial={'problem':self.kwargs['pk']})
         return context
 
 class ProblemUpdate(LoginRequiredMixin, UpdateView):
