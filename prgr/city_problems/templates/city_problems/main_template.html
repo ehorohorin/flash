@@ -15,10 +15,10 @@
                 <a href="{% url 'city:create_problem' %}">
                     <li>Добавить проблему</li>
                 </a>
+                <a href="{% url 'city:user_profile' %}">
+                    <li>Профиль</li>
+                 </a>
             {% endif %}
-            <a href="{% url 'city:user_profile' %}">
-                <li>Профиль</li>
-            </a>
             {% if user.is_authenticated %}
                 <a href="{% url 'city:logout' %}">
                     <li>Выйти</li>

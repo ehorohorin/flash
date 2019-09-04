@@ -6,28 +6,26 @@ from django.views.generic import ListView, CreateView, DetailView, UpdateView, D
 
 # noinspection PyUnresolvedReferences
 from city_problems.models import Comment
+
+from ..models import Status
 from ..models import Problem
 
 class ProblemListView(ListView):
-
     model = Problem
- #   template_name = "city_problems/problem_list.html"
+
 
 class ProblemCreate(LoginRequiredMixin, CreateView):
     model = Problem
-    fields = ['short_name', 'description', 'image', 'status']
+    fields = ['short_name', 'description', 'image']
     template_name = "city_problems/add_problem.html"
 
     def form_valid(self, form):
         form.instance.creation_date = datetime.now()
         form.instance.user = self.request.user
+        form.instance.status = Status.objects.filter(name='Открыто').first()
         return super().form_valid(form)
 
-#добавить форму в view
-#форма добавления коментария
-# в action прописать адрес view для добавления коментария. CommentCreate, get - None
-# в ProblemDetail добавить обвес для создания коментария
-    # код форма от модели, миксин для создания коментария?
+
 from django.forms import ModelForm, Textarea, models, HiddenInput
 
 
