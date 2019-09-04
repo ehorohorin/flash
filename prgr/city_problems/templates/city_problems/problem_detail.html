@@ -7,6 +7,7 @@
         <img src="{{ MEDIA_URL }}{{ problem.image }}" style="width: 20%; height: 20%">
         <p>{{ problem.creation_date }}</p>
         <p>{{ problem.status }}</p>
+        <p>{{ problem.user }}</p>
         <p><a href="{% url 'city:problem_update' problem.id %}">Изменить</a>
             <a href="{% url 'city:problem_delete' problem.id %}">Удалить</a></p>
     </article>
@@ -16,6 +17,7 @@
     <article>
             <p>{{ comment.text }}</p>
             <p>{{ comment.date_created }}</p>
+            <p>Автор: {{ comment.user }}</p>
     </article>
 {% empty %}
     <h2>У этой проблемы еще не комментариев</h2>

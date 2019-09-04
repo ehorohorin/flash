@@ -9,6 +9,7 @@
         <img src="{{ MEDIA_URL }}{{ problem.image }}" style="width: 20%; height: 20%">
         <p>{{ problem.creation_date }}</p>
         <p>{{ problem.status }}</p>
+        <p>{{ problem.user }}</p>
         <p><a href="{% url 'city:problem_update' problem.id %}">Изменить</a></p>
     </article>
 {% empty %}

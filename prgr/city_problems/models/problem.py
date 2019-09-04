@@ -12,8 +12,7 @@ class Problem(models.Model):
     image = models.ImageField() #TODO production ready deployment - nginx
     short_name = models.CharField(max_length=140)
     description = models.CharField(max_length=3000)
-    votes = models.ManyToManyField(settings.AUTH_USER_MODEL,through='Vote')
-
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
     class Meta:
         ordering = ['-creation_date']

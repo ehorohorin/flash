@@ -14,6 +14,7 @@ class CommentCreate(LoginRequiredMixin, CreateView):
     def form_valid(self, form):
         self.success_url = reverse('city:problem_detail', kwargs={'pk':form.cleaned_data['problem'].id})
         form.instance.date_created = datetime.now()
+        form.instance.user = self.request.user
         return super().form_valid(form)
 
 

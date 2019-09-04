@@ -20,6 +20,7 @@ class ProblemCreate(LoginRequiredMixin, CreateView):
 
     def form_valid(self, form):
         form.instance.creation_date = datetime.now()
+        form.instance.user = self.request.user
         return super().form_valid(form)
 
 #добавить форму в view
