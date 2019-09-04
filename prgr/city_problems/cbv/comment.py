@@ -1,3 +1,4 @@
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse
 from django.utils.datetime_safe import datetime
 from django.views.generic import CreateView
@@ -5,7 +6,7 @@ from django.views.generic import CreateView
 from city_problems.models import Comment
 
 
-class CommentCreate(CreateView):
+class CommentCreate(LoginRequiredMixin, CreateView):
     model = Comment
     http_method_names = ['post']
     fields = ['text', 'problem']

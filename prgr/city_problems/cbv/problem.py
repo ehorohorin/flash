@@ -13,7 +13,7 @@ class ProblemListView(ListView):
     model = Problem
  #   template_name = "city_problems/problem_list.html"
 
-class ProblemCreate(CreateView):
+class ProblemCreate(LoginRequiredMixin, CreateView):
     model = Problem
     fields = ['short_name', 'description', 'image', 'status']
     template_name = "city_problems/add_problem.html"

@@ -21,11 +21,13 @@
     <h2>У этой проблемы еще не комментариев</h2>
 {% endfor %}
     </div>
-<div>
-    <form action="{% url 'city:create-comment' %}" method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <input type="submit" value="Добавить комментарий">
-    </form>
-</div>
+     {% if user.is_authenticated %}
+        <div>
+            <form action="{% url 'city:create-comment' %}" method="post">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <input type="submit" value="Добавить комментарий">
+            </form>
+        </div>
+    {% endif %}
 {% endblock %}
