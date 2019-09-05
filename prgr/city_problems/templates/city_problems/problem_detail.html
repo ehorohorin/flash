@@ -8,10 +8,35 @@
         <p>{{ problem.creation_date }}</p>
         <p>{{ problem.status }}</p>
         <p>{{ problem.user }}</p>
+        {% if user ==  problem.user%}
         <p><a href="{% url 'city:problem_update' problem.id %}">Изменить</a>
             <a href="{% url 'city:problem_delete' problem.id %}">Удалить</a></p>
+        {% endif %}
+    {% if user.is_authenticated %}
+        <div>
+            <form action="{% url 'city:create-vote' %}" method="post">
+                {% csrf_token %}
+                {{ vote_form.as_p }}
+                {% if vote_exists %}
+                <input type="submit" value="Вы уже голосовали" disabled>
+                    {% else %}
+                     <input type="submit" value="Проголосовать">
+                    {% endif %}
+            </form>
+        </div>
+    {% endif %}
     </article>
-
+    <div>
+    <p>Всего голосов {{ votes|length }}</p>
+    {% for vote in votes %}
+    <article>
+            <p>{{ vote.vote_date}}</p>
+            <p>Автор: {{ vote.user }}</p>
+    </article>
+{% empty %}
+    <h2>У этой проблемы еще не комментариев</h2>
+{% endfor %}
+    </div>
     <div>
         {% for comment in comments %}
     <article>
@@ -27,7 +52,7 @@
         <div>
             <form action="{% url 'city:create-comment' %}" method="post">
                 {% csrf_token %}
-                {{ form.as_p }}
+                {{ comment_form.as_p }}
                 <input type="submit" value="Добавить комментарий">
             </form>
         </div>

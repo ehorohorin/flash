@@ -27,5 +27,16 @@
 {% empty %}
     <h2>У этой проблемы еще не комментариев</h2>
 {% endfor %}
+        <h1>Ваши голоса:</h1>
+
+            {% for vote in votes %}
+    <article>
+            <p>{{ vote.vote_date}}</p>
+            <p>Автор: {{ vote.user }}</p>
+            <p>Проблема: {{ vote.problem }}</p>
+    </article>
+{% empty %}
+    <h2>У этой проблемы еще не комментариев</h2>
+{% endfor %}
 
 {% endblock %}

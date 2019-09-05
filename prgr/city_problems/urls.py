@@ -20,6 +20,6 @@ urlpatterns = [
     path('test/', test_request, name='test'),
     path('accounts/profile/', RedirectView.as_view(url='/', permanent=False)),
     path('accounts/', include('django.contrib.auth.urls')),
-    path('add-comment/', CommentCreate.as_view(), name='create-comment')
-
+    path('add-comment/', CommentCreate.as_view(), name='create-comment'),
+    path('create-vote/', CreateVote.as_view(), name='create-vote')
 ]

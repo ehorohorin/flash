@@ -5,6 +5,19 @@ from django.views.generic import CreateView
 # noinspection PyUnresolvedReferences
 from city_problems.models import Comment
 
+from django.forms import ModelForm, Textarea, models, HiddenInput
+
+
+class CommentForm(ModelForm):
+
+    class Meta:
+        model = Comment
+        fields = ['text', 'problem']
+        widgets = {
+            'text': Textarea(attrs={'cols': 100, 'rows': 4}),
+            'problem': HiddenInput()
+        }
+
 
 class CommentCreate(LoginRequiredMixin, CreateView):
     model = Comment

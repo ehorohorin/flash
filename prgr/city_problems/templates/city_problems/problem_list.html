@@ -10,7 +10,9 @@
         <p>{{ problem.creation_date }}</p>
         <p>{{ problem.status }}</p>
         <p>{{ problem.user }}</p>
+         {% if user ==  problem.user%}
         <p><a href="{% url 'city:problem_update' problem.id %}">Изменить</a></p>
+        {% endif %}
     </article>
 {% empty %}
     <h2>В этом городе нет проблем!</h2>

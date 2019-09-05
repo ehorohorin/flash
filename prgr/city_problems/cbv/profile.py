@@ -3,6 +3,7 @@ from django.views.generic import ListView
 
 from ..models import Comment
 from ..models import Problem
+from ..models import Vote
 
 
 class UserProfile(LoginRequiredMixin, ListView):
@@ -14,4 +15,5 @@ class UserProfile(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['comments'] = Comment.objects.filter(user=self.request.user)
+        context['votes'] = Vote.objects.filter(user=self.request.user)
         return context
