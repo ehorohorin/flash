@@ -16,9 +16,9 @@
 package com.flash.guardian;
 
 import android.content.Context;
-import android.support.annotation.UiThread;
+import androidx.annotation.UiThread;
 
-import com.google.android.gms.samples.vision.barcodereader.ui.camera.GraphicOverlay;
+import com.flash.guardian.ui.camera.GraphicOverlay;
 import com.google.android.gms.vision.Detector;
 import com.google.android.gms.vision.Tracker;
 import com.google.android.gms.vision.barcode.Barcode;
