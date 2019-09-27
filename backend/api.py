@@ -6,6 +6,7 @@ import json
 import time
 import io
 import qrcode
+from ticket import Ticket
 from os.path import dirname, realpath
 from base64 import b64encode
 from sys import argv, exit
@@ -36,6 +37,8 @@ PIC_THUMB_PATH = dirname(realpath(__file__)) + "/pic_preview.jpg"
 # {"mimetype":"com.seraphim.imagemessage","receiver":"c13c4f998a3495acc795ea7fc59ab54065c0a29ed6ecb203e8b1c509ba9dfc72","opaque":2,"receiverencoding":"hash","image":"IMAGE_DATA","imagethumbnail":"IMAGE_THUMBNAIL_DATA","imageformat":"jpg","auth":"1b190253fc80765a897f0d39b13d1774dd34ee77de2116e62bc7121ab6fb625b"}
 
 # Ключи к запросам и ответам сервиса работы с сообщениями
+
+
 class ApiKeys:
     MimeType = "mimetype"  # тип сообщения
     Receiver = "receiver"  # получатель
@@ -57,7 +60,8 @@ class ApiResult:
     JsonFieldMissing = 100  # Не переданы все обязательные поля
     ParsePacketError = 101  # Некорректный пакет
     JsonSyntaxError = 102  # Ошибка парсинга. Не хватает закрывающей скобки или запятой
-    SenderNotReady = 103  # Сервис отправки сообщений не может обработать сообщение в данный момент
+    # Сервис отправки сообщений не может обработать сообщение в данный момент
+    SenderNotReady = 103
     FileNotExist = 104  # Файл с контентом не существует. Возможно не было передано изображение
     BadReceiver = 105  # Некорректный получатель сообщения
     Timeout = 106  # Сервер не дождался всех фрагментов команды
@@ -135,28 +139,23 @@ def subscribe_to_messages(auth_token, opaque):
         }
     )
 
+
 OPAQUE = 0
 
 if __name__ == '__main__':
     if (len(argv) < 4):
-        print ("Нужно передать параметры: IP адрес, порт, токен")
+        print("Нужно передать параметры: IP адрес, порт, токен")
         exit(0)
     ip_addr = argv[1]  # IP адрес, например 127.0.0.1
     port = int(argv[2])  # порт, например 20000
     auth_token = argv[3]  # токен аутентификации бота
-    print (auth_token)
+    print(auth_token)
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.connect((ip_addr, port))
     msg = subscribe_to_messages(auth_token, OPAQUE)
-    print (msg)
+    print(msg)
     sock.sendall(bytes(msg, 'utf-8'))
     OPAQUE += 1
-    pic = None
-    pic_thumb = None
-    with open(PIC_PATH, "rb") as f_pic:
-        pic = f_pic.read()
-        with open(PIC_THUMB_PATH, "rb") as f_pic_thumb:
-            pic_thumb = f_pic_thumb.read()
 
     while True:
         data = sock.recv(1024)
@@ -170,32 +169,39 @@ if __name__ == '__main__':
             for encoded_msg in messages:
                 if encoded_msg:
                     msg = json.loads(encoded_msg)
-                    if msg.__contains__(ApiKeys.Sender):  # входящее сообщение от пользователя
-                        echo_msg = create_text_message(auth_token, msg[ApiKeys.Text], msg[ApiKeys.Sender], OPAQUE)
+                    # входящее сообщение от пользователя
+                    if msg.__contains__(ApiKeys.Sender):
+                        person_ticket = Ticket()
+                        ticket_data_json = json.dumps(
+                            person_ticket.__dict__, indent=4, sort_keys=True, default=str)
+                        echo_msg = create_text_message(
+                            auth_token, ticket_data_json, msg[ApiKeys.Sender], OPAQUE)
                         print(echo_msg)
                         sock.sendall(bytes(echo_msg, 'utf-8'))
                         OPAQUE += 1
 
                         # make qr code
                         qr_code_bytes = io.BytesIO()
-                        qr_code_image = qrcode.make(msg[ApiKeys.Text])                        
-                        qr_code_image.save(qr_code_bytes, format='PNG',)
+                        qr_code_image = qrcode.make(ticket_data_json)
+                        qr_code_image.save(qr_code_bytes, format='PNG')
                         qr_code_bytes = qr_code_bytes.getvalue()
 
-                        # amke thubmnail for qr code
+                        # make thubmnail for qr code
                         qr_code_thumbnail = io.BytesIO()
                         size = 512, 512
                         qr_code_image.thumbnail(size)
                         qr_code_image.save(qr_code_thumbnail, format='PNG')
-                        qr_code_thumbnail = qr_code_thumbnail.getvalue()                   
+                        qr_code_thumbnail = qr_code_thumbnail.getvalue()
 
                         echo_image = create_image_message(auth_token, msg[ApiKeys.Sender], OPAQUE, qr_code_bytes,
-                                                 qr_code_thumbnail, ImageFormat.Png)
-                        #print(echo_image)
+                                                          qr_code_thumbnail, ImageFormat.Png)
+                        # print(echo_image)
                         OPAQUE += 1
                         sock.sendall(bytes(echo_image, 'utf-8'))
-                    elif msg.__contains__(ApiKeys.OpaqueData):  # результат выполнения запроса
-                        if int(msg[ApiKeys.Result]) != ApiResult.Ok:  # здесь можно обработать ошибки
+                    # результат выполнения запроса
+                    elif msg.__contains__(ApiKeys.OpaqueData):
+                        # здесь можно обработать ошибки
+                        if int(msg[ApiKeys.Result]) != ApiResult.Ok:
                             print("error :", msg[ApiKeys.Result])
 
         time.sleep(1)
