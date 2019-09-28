@@ -1,2 +1,9 @@
-env/Scripts/activate
-python api.py api.seraphim.online 20011 f2ee10ad81dd6159238275dbfbd67ee5769cb1b669df9111cf834970772c1743
+if [ ! -d env ]; 
+then 
+	python -m venv env
+fi
+
+
+
+env/bin/activate
+python server.py api.seraphim.online 20013 e18fd2e9cfa91559a9658bfe31e95160da755368f8e281b52945c6be48f3fdd7
