@@ -173,7 +173,7 @@ if __name__ == '__main__':
                     if msg.__contains__(ApiKeys.Sender):
                         person_ticket = Ticket()
                         ticket_data_json = json.dumps(
-                            person_ticket.__dict__, indent=4, sort_keys=True, default=str)
+                            person_ticket.__dict__, indent=4, sort_keys=True, default=str, ensure_ascii=False)
                         echo_msg = create_text_message(
                             auth_token, ticket_data_json, msg[ApiKeys.Sender], OPAQUE)
                         print(echo_msg)
