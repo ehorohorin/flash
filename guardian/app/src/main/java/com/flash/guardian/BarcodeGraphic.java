@@ -19,9 +19,13 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
+import android.util.Log;
 
 import com.flash.guardian.ui.camera.GraphicOverlay;
 import com.google.android.gms.vision.barcode.Barcode;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  * Graphic instance for rendering barcode position, size, and ID within an associated graphic
@@ -42,6 +46,8 @@ public class BarcodeGraphic extends GraphicOverlay.Graphic {
     private Paint mRectPaint;
     private Paint mTextPaint;
     private volatile Barcode mBarcode;
+
+    private JSONObject jsonobj;
 
     BarcodeGraphic(GraphicOverlay overlay) {
         super(overlay);
@@ -98,7 +104,21 @@ public class BarcodeGraphic extends GraphicOverlay.Graphic {
         rect.bottom = translateY(rect.bottom);
         canvas.drawRect(rect, mRectPaint);
 
+        Log.d("Barcode scaned", barcode.rawValue);
+        String name = "";
+
+        try {
+            jsonobj = new JSONObject(barcode.rawValue);
+            name = jsonobj.getString("name");
+            Log.d("Barcode", jsonobj.getString("name"));
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+
         // Draws a label at the bottom of the barcode indicate the barcode value that was detected.
-        canvas.drawText(barcode.rawValue, rect.left, rect.bottom, mTextPaint);
+//        canvas.drawText(barcode.rawValue, rect.left, rect.bottom, mTextPaint);
+        canvas.drawText(name, rect.left, rect.bottom, mTextPaint);
+
     }
 }
