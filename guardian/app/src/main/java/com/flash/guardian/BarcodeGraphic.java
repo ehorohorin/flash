@@ -19,26 +19,18 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
-import android.util.Log;
 
 import com.flash.guardian.ui.camera.GraphicOverlay;
+import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.vision.barcode.Barcode;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.security.InvalidKeyException;
 import java.security.KeyPair;
-import java.security.KeyPairGeneratorSpi;
-import java.security.NoSuchAlgorithmException;
-import java.security.PublicKey;
-import java.security.Signature;
-import java.security.SignatureException;
-import java.security.SignedObject;
 
 /**
  * Graphic instance for rendering barcode position, size, and ID within an associated graphic
@@ -59,6 +51,8 @@ public class BarcodeGraphic extends GraphicOverlay.Graphic {
     private JSONObject jsonobj;
     private KeyPair keyPair;
 
+    private FusedLocationProviderClient fusedLocationClient = null;
+
     BarcodeGraphic(GraphicOverlay overlay) {
         super(overlay);
 
@@ -72,7 +66,7 @@ public class BarcodeGraphic extends GraphicOverlay.Graphic {
 
         mTextPaint = new Paint();
         mTextPaint.setColor(selectedColor);
-        mTextPaint.setTextSize(36.0f);
+        mTextPaint.setTextSize(56.0f);
     }
 
     public int getId() {
@@ -85,16 +79,6 @@ public class BarcodeGraphic extends GraphicOverlay.Graphic {
 
     public Barcode getBarcode() {
         return mBarcode;
-    }
-
-//    http://java-online.ru/blog-signature.xhtml
-    private boolean verifySignedObject(final SignedObject obj, PublicKey key)
-            throws InvalidKeyException, SignatureException,
-            NoSuchAlgorithmException
-    {
-        // Verify the signed object
-        Signature signature = Signature.getInstance(key.getAlgorithm());
-        return obj.verify(key, signature);
     }
 
     /**
@@ -122,60 +106,11 @@ public class BarcodeGraphic extends GraphicOverlay.Graphic {
         rect.top = translateY(rect.top);
         rect.right = translateX(rect.right);
         rect.bottom = translateY(rect.bottom);
+//        mRectPaint.setAlpha(10);
         canvas.drawRect(rect, mRectPaint);
 
-        Log.d("Barcode scaned", barcode.rawValue);
-        String name = "";
-
-        //TODO инициализировать
-        SignedObject signedObject = null;
-//        PublicKey publicKey  = (PublicKey) readKey(FILE_public);
-        PublicKey publicKey  = null;
-
-
-        try {
-            jsonobj = new JSONObject(barcode.rawValue);
-            name = jsonobj.getString("name");
-            Log.d(TAG, jsonobj.getString("name"));
-            Signature signature = Signature.getInstance("SHA256WithDSA");
-
-            signature.initVerify(keyPair.getPublic());
-
-
-
-            // Проверка подписанного объекта
-
-            boolean verified = verifySignedObject(signedObject, publicKey);
-            Log.d(TAG, "Проверка подписи объекта : " + verified);
-
-            // Извлечение подписанного объекта
-            String unsignedObject = (String) signedObject.getObject();
-
-            Log.d(TAG, "Исходный текст объекта : " + unsignedObject);
-            KeyPairGeneratorSpi keyPairGenerator = null;
-            KeyPair keyPair = keyPairGenerator.generateKeyPair();
-
-        } catch (JSONException e) {
-            e.printStackTrace();
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        } catch (InvalidKeyException e) {
-            e.printStackTrace();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (SignatureException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-
-
         // Draws a label at the bottom of the barcode indicate the barcode value that was detected.
-//        canvas.drawText(barcode.rawValue, rect.left, rect.bottom, mTextPaint);
-        canvas.drawText(name, rect.left, rect.bottom, mTextPaint);
-
+        canvas.drawText(barcode.rawValue, rect.left, rect.bottom, mTextPaint);
     }
 
     private Object readKey(final String filePath)

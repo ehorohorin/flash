@@ -28,11 +28,16 @@ import android.content.pm.PackageManager;
 import android.hardware.Camera;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Base64;
 import android.util.Log;
 import android.view.GestureDetector;
+import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
+import android.widget.LinearLayout;
+import android.widget.PopupWindow;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -50,7 +55,26 @@ import com.google.android.gms.vision.barcode.Barcode;
 import com.google.android.gms.vision.barcode.BarcodeDetector;
 import com.google.android.material.snackbar.Snackbar;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.security.InvalidKeyException;
+import java.security.KeyFactory;
+import java.security.KeyPair;
+import java.security.KeyPairGeneratorSpi;
+import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
+import java.security.Signature;
+import java.security.SignatureException;
+import java.security.SignedObject;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.X509EncodedKeySpec;
+import java.util.zip.GZIPInputStream;
 
 /**
  * Activity for the multi-tracker app.  This app detects barcodes and displays the value with the
@@ -78,6 +102,9 @@ public final class BarcodeCaptureActivity extends AppCompatActivity implements B
     // helper objects for detecting taps and pinches.
     private ScaleGestureDetector scaleGestureDetector;
     private GestureDetector gestureDetector;
+
+    private KeyPair keyPair;
+
 
     /**
      * Initializes the UI and creates the detector pipeline.
@@ -434,5 +461,162 @@ public final class BarcodeCaptureActivity extends AppCompatActivity implements B
     @Override
     public void onBarcodeDetected(Barcode barcode) {
         //do something with barcode data returned
+        Log.d(TAG, barcode.rawValue);
+//        showPopupWindow(mPreview);
+        checkBarcode(barcode);
     }
+
+    public static String decompress(byte[] bytes) throws Exception {
+
+        GZIPInputStream gis = new GZIPInputStream(new ByteArrayInputStream(bytes));
+        BufferedReader bf = new BufferedReader(new InputStreamReader(gis, "UTF-8"));
+        String outStr = "";
+        String line;
+        while ((line=bf.readLine())!=null) {
+            outStr += line;
+        }
+        Log.d(TAG, "Output String lenght : " + outStr.length());
+        return outStr;
+    }
+
+    private void checkBarcode(Barcode barcode) {
+        Log.d("Barcode scaned", barcode.rawValue);
+        String name = "";
+
+        //TODO инициализировать
+        SignedObject signedObject = null;
+//        PublicKey publicKey  = (PublicKey) readKey(FILE_public);
+        PublicKey publicKey  = null;
+        JSONObject jsonobj;
+
+
+        String decomp_str = "";
+        try {
+            decomp_str = decompress(barcode.rawValue.getBytes());
+            Log.d(TAG, decomp_str);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+
+        try {
+            jsonobj = new JSONObject(barcode.rawValue);
+
+            String s1, s2;
+
+            s1 = barcode.rawValue;
+            s2 = jsonobj.toString(4);
+
+            if (s1.equals(s2)) {
+                Log.d(TAG, "Equals!");
+            } else {
+                Log.d(TAG, "not Equals!");
+            }
+
+            String json_signature = jsonobj.getString("signature");
+            jsonobj.put("signature", "");
+//            name = jsonobj.getString("name");
+            Log.d(TAG, jsonobj.getString("name"));
+            Log.d(TAG, jsonobj.toString(4));
+
+
+            // TODO keyPair == nul
+
+//            String appPublicKey = "-----BEGIN PUBLIC KEY-----MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAt1INRoOrfuXP4QMiEm0ezwKKI0iZARvevgpR7ejXQOH4bU3CynlXj9qXKujMXgnySUuLKqhNVd0kbT+yAycbqyTwNGj4+ydFQ6eSDAHMy587QDe8ahoTADCiZh3afjPEI+akyQFuTgYSgi7AsQwipH8s3sDG9Gs9sv9iSHuSiArz1YipaWQJfa/ssEq/SVargkDupYnKIxcIgewmVpv5\n" +
+//                    "miRyB6kgko0QIWp1UvnByw2+dsQXWum9q3NCobHuhvAdl02GA2nCGG/Nm/nu9jdeq51EL/oxLmMSez5evG78//NLwGafq43phmzCK43mCbeinX2ZYqysh1sV4+hugMPlbwIDAQAB-----END PUBLIC KEY-----";
+
+            String appPublicKey = "";
+//            String appPublicKey = "-----BEGIN PUBLIC KEY-----\n";
+            appPublicKey += "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAt1INRoOrfuXP4QMiEm0ezwKKI0iZARvevgpR7ejXQOH4bU3CynlXj9qXKujMXgnySUuLKqhNVd0kbT+yAycbqyTwNGj4+ydFQ6eSDAHMy587QDe8ahoTADCiZh3afjPEI+akyQFuTgYSgi7AsQwipH8s3sDG9Gs9sv9iSHuSiArz1YipaWQJfa/ssEq/SVargkDupYnKIxcIgewmVpv5\n";
+            appPublicKey += "miRyB6kgko0QIWp1UvnByw2+dsQXWum9q3NCobHuhvAdl02GA2nCGG/Nm/nu9jdeq51EL/oxLmMSez5evG78//NLwGafq43phmzCK43mCbeinX2ZYqysh1sV4+hugMPlbwIDAQAB\n";
+//            appPublicKey += "-----END PUBLIC KEY-----";
+
+            PublicKey key = loadKey(appPublicKey);
+            Log.d(TAG, "Key" + key.toString());
+
+            Signature signature = Signature.getInstance("SHA256");
+            signature.initVerify(key);
+
+            // Проверка подписанного объекта
+
+            boolean verified = verifySignedObject(signedObject, publicKey);
+            Log.d(TAG, "Проверка подписи объекта : " + verified);
+
+            // Извлечение подписанного объекта
+            String unsignedObject = (String) signedObject.getObject();
+
+            Log.d(TAG, "Исходный текст объекта : " + unsignedObject);
+            KeyPairGeneratorSpi keyPairGenerator = null;
+            KeyPair keyPair = keyPairGenerator.generateKeyPair();
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (InvalidKeyException e) {
+            e.printStackTrace();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (SignatureException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        } catch (InvalidKeySpecException e) {
+            e.printStackTrace();
+        }
+
+
+    }
+
+
+    private PublicKey loadKey(String key) throws InvalidKeySpecException, NoSuchAlgorithmException {
+        byte[] keyBytes = Base64.decode(key, Base64.DEFAULT);
+        keyBytes = key.getBytes();
+
+        X509EncodedKeySpec spec = new X509EncodedKeySpec(keyBytes);
+        KeyFactory kf = KeyFactory.getInstance("RSA");
+        PublicKey result = kf.generatePublic(spec);
+        return result;
+        }
+
+
+//    http://java-online.ru/blog-signature.xhtml
+    private boolean verifySignedObject(final SignedObject obj, PublicKey key)
+            throws InvalidKeyException, SignatureException,
+            NoSuchAlgorithmException
+    {
+        // Verify the signed object
+        Signature signature = Signature.getInstance(key.getAlgorithm());
+        return obj.verify(key, signature);
+    }
+
+    public void showPopupWindow(View view) {
+
+        // inflate the layout of the popup window
+        LayoutInflater inflater = (LayoutInflater)
+                getSystemService(LAYOUT_INFLATER_SERVICE);
+        View popupView = inflater.inflate(R.layout.popup_window, null);
+
+        // create the popup window
+        int width = LinearLayout.LayoutParams.WRAP_CONTENT;
+        int height = LinearLayout.LayoutParams.WRAP_CONTENT;
+        boolean focusable = true; // lets taps outside the popup also dismiss it
+        final PopupWindow popupWindow = new PopupWindow(popupView, width, height, focusable);
+
+        // show the popup window
+        // which view you pass in doesn't matter, it is only used for the window tolken
+        popupWindow.showAtLocation(view, Gravity.CENTER, 0, 0);
+
+        // dismiss the popup window when touched
+        popupView.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                popupWindow.dismiss();
+                return true;
+            }
+        });
+    }
+
 }
