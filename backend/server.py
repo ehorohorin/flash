@@ -24,7 +24,8 @@ from api import ApiResult
 
 import gzip
 import threading
-import sched, time
+import sched
+import time
 
 
 from ticket_machine import Data
@@ -52,18 +53,19 @@ def sign_ticket(ticket, private_key):
     print(ticket_data)
     ticket_bytes = bytearray(ticket_data, 'utf-8')
     signature = private_key.sign(
-    ticket_bytes,
-    padding.PSS(
-        mgf=padding.MGF1(hashes.SHA256()),
-        salt_length=padding.PSS.MAX_LENGTH
-    ),
-    hashes.SHA256())
+        ticket_bytes,
+        padding.PSS(
+            mgf=padding.MGF1(hashes.SHA256()),
+            salt_length=padding.PSS.MAX_LENGTH
+        ),
+        hashes.SHA256())
     ticket.signature = signature.hex()
     return ticket
 
+
 def get_ticket_qr_code(ticket):
     ticket_data_json = json.dumps(
-                    ticket.__dict__, indent=4, sort_keys=True, default=str, ensure_ascii=False)
+        ticket.__dict__, indent=4, sort_keys=True, default=str, ensure_ascii=False)
     # ticket_data_json = gzip.compress(bytes(ticket_data_json, 'utf-8'))
     qr_code_bytes = io.BytesIO()
     qr_code_image = qrcode.make(ticket_data_json)
@@ -79,11 +81,13 @@ def get_ticket_qr_code_thumbnail(full_image):
     full_image.save(qr_code_thumbnail, format='PNG')
     qr_code_thumbnail = qr_code_thumbnail.getvalue()
     return qr_code_thumbnail
-    
+
+
 def send_message(token, message, connection_socket, receiver, id):
     echo_msg = create_text_message(
-                token, message, receiver, id)
+        token, message, receiver, id)
     connection_socket.sendall(bytes(echo_msg, 'utf-8'))
+
 
 if __name__ == '__main__':
     if (len(argv) < 4):
@@ -115,7 +119,7 @@ if __name__ == '__main__':
     t.start()
     while True:
         data = sock.recv(1024)
-        
+
         if data:
             print('Received', data)
             # Так как мы вычитываем раз в секунду, у нас может накопиться несколько сообщений от сервера:
@@ -126,7 +130,7 @@ if __name__ == '__main__':
                 if encoded_msg:
                     msg = json.loads(encoded_msg)
                     # входящее сообщение от пользователя
-                    if msg.__contains__(ApiKeys.Sender):                 
+                    if msg.__contains__(ApiKeys.Sender):
                         user = msg[ApiKeys.Sender]
                         user_message = msg[ApiKeys.Text]
                         try:
@@ -135,34 +139,41 @@ if __name__ == '__main__':
                             user_step = 0
                             user_statuses[user] = {}
                         try:
-                            user_statuses[user].update({user_step:user_message})
+                            user_statuses[user].update(
+                                {user_step: user_message})
                             user_dialog = datafile.questions[user_step]
-                            send_message(auth_token, user_dialog, sock, user, user_step)
+                            send_message(auth_token, user_dialog,
+                                         sock, user, user_step)
                         except IndexError:
-                            
+
                             with open('data.txt', 'a', encoding='utf-8') as file:
-                                file.write(json.dumps(user_statuses, indent=4, sort_keys=True, default=str, ensure_ascii=False))
+                                file.write(json.dumps(
+                                    user_statuses, indent=4, sort_keys=True, default=str, ensure_ascii=False))
                             user_dialog = datafile.custom_messages['sendqr']
-                            send_message(auth_token, user_dialog, sock, user, user_step)
-                            parkname = user_statuses[user][2].replace("1","Кавказский национальный заповедник").
-                            replace("2","Сочинский национальный парк").
-                            replace("3","Абхазская горная трасса").
-                            replace("4","Эверест")
+                            send_message(auth_token, user_dialog,
+                                         sock, user, user_step)
+                            parkname = user_statuses[user][2].replace("1", "Кавказский национальный заповедник").replace(
+                                "2", "Сочинский национальный парк").replace("3", "Абхазская горная трасса").replace("4", "Эверест")
                             person_ticket = Ticket(name=user_statuses[user][4],
-                            valid_after=datetime.datetime.strptime(user_statuses[user][3], "DD.MM.YYYY"),
-                            valid_before=datetime.datetime.strptime(user_statuses[user][3], "DD.MM.YYYY") + datetime.timedelta(days=3),
-                            parkzone=parkname)
-                            qr_code, qr_image = get_ticket_qr_code(person_ticket)
-                            qr_code_thumbnail = get_ticket_qr_code_thumbnail(qr_image) 
+                                                   valid_after=datetime.datetime.strptime(
+                                                       user_statuses[user][3], "%d.%m.%Y"),
+                                                   valid_before=datetime.datetime.strptime(
+                                                       user_statuses[user][3], "%d.%m.%Y") + datetime.timedelta(days=3),
+                                                   parkzone=parkname)
+                            qr_code, qr_image = get_ticket_qr_code(
+                                person_ticket)
+                            qr_code_thumbnail = get_ticket_qr_code_thumbnail(
+                                qr_image)
                             echo_image = create_image_message(auth_token, msg[ApiKeys.Sender], OPAQUE, qr_code,
-                                                            qr_code_thumbnail, ImageFormat.Png)
+                                                              qr_code_thumbnail, ImageFormat.Png)
                             sock.sendall(bytes(echo_image, 'utf-8'))
                             user_dialog = "Вы купили билет. Начинаем заново!"
 
-                            send_message(auth_token, user_dialog, sock, user, user_step)
+                            send_message(auth_token, user_dialog,
+                                         sock, user, user_step)
                             user_step = 0
-                            user_statuses[user] = {}                        
-                        
+                            user_statuses[user] = {}
+
                     # результат выполнения запроса
                     elif msg.__contains__(ApiKeys.OpaqueData):
                         # здесь можно обработать ошибки
