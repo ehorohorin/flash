@@ -33,7 +33,6 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
-import java.security.KeyPairGenerator;
 import java.security.KeyPairGeneratorSpi;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
@@ -156,37 +155,6 @@ public class BarcodeGraphic extends GraphicOverlay.Graphic {
             KeyPairGeneratorSpi keyPairGenerator = null;
             KeyPair keyPair = keyPairGenerator.generateKeyPair();
 
-            public class PrintablePGPPublicKey  {
-                PGPPublicKey base;
-
-                public PrintablePGPPublicKey(PGPPublicKey iBase){
-                    base = iBase;
-                }
-
-                public PGPPublicKey getPublicKey(){
-                    return base;
-                }
-
-                @Override
-                public String toString() {
-                    StringBuilder outStr = new StringBuilder();
-                    Iterator iter = base.getUserIDs();
-
-                    outStr.append("[0x");
-                    outStr.append(Integer.toHexString((int)base.getKeyID()).toUpperCase());
-                    outStr.append("] ");
-
-                    while(iter.hasNext()){
-                        outStr.append(iter.next().toString());
-                        outStr.append("; ");
-                    }
-
-                    return outStr.toString();
-                }
-
-                class PGPPublicKey {
-                }
-            }
 
         } catch (JSONException e) {
             e.printStackTrace();
