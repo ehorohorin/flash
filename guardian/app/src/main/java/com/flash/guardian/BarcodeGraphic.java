@@ -30,7 +30,9 @@ import org.json.JSONObject;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
 import java.security.Signature;
+import java.security.SignedObject;
 
 /**
  * Graphic instance for rendering barcode position, size, and ID within an associated graphic
@@ -118,7 +120,14 @@ public class BarcodeGraphic extends GraphicOverlay.Graphic {
             Signature signature = Signature.getInstance("SHA256WithDSA");
 
             signature.initVerify(keyPair.getPublic());
+            // Проверка подписанного объекта
+            boolean verified = verifySignedObject(signedObject, publicKey);
+            System.out.println("Проверка подписи объекта : " + verified);
 
+            // Извлечение подписанного объекта
+            String unsignedObject = (String) signedObject.getObject();
+
+            System.out.println("Исходный текст объекта : " + unsignedObject);
         } catch (JSONException e) {
             e.printStackTrace();
         } catch (NoSuchAlgorithmException e) {
