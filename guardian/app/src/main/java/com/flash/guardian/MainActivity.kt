@@ -53,8 +53,8 @@ class MainActivity : AppCompatActivity() {
                 zxing_barcode_scanner.pause()
                 Log.d("SCANNER READ", it)
                 try {
-                    val data = Gson().fromJson(it, QrJsonData::class.java)
-                    showDialog(data.dataOk == true)
+                    val data = Gson().fromJson(it, Ticket::class.java)
+                    checkTicket(data)
                 } catch (e: Exception) {
                     zxing_barcode_scanner.resume()
                     Log.d("SCANNER PARSE", e.message ?: "unknown error parse data")
@@ -67,10 +67,10 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    private fun showDialog(isOk: Boolean) {
+    private fun checkTicket(data: Ticket) {
         AlertDialog.Builder(this)
-            .setTitle("Просканировано")
-            .setMessage(if (isOk) "OK" else "FAIL")
+            .setTitle("Билет")
+            .setMessage(if (data.valid) "Билет проверен" else "Билет недействителен!")
             .setCancelable(false)
             .setPositiveButton("OK") { _, _ ->
                 zxing_barcode_scanner.resume()
