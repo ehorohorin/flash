@@ -18,7 +18,6 @@ from api import subscribe_to_messages
 from api import create_image_message
 
 
-
 from api import ImageFormat
 from api import ApiKeys
 from api import ApiResult
@@ -26,6 +25,11 @@ from api import ApiResult
 import gzip
 import threading
 import sched, time
+
+
+from ticket_machine import Data
+from ticket_machine import ReacreationInfo
+
 
 OPAQUE = 0
 KEEP_ALIVE_TIME = 120
@@ -42,12 +46,11 @@ def resub(sock, token):
 
 
 def sign_ticket(ticket, private_key):
-    ticket_data_json = json.dumps(
-        ticket.__dict__, indent=4, sort_keys=True, default=str, ensure_ascii=False)
-
-    print("-----------------json---------------")
-    print(ticket_data_json)
-    ticket_bytes = bytearray(ticket_data_json, 'utf-8')
+    # ticket_data_json = json.dumps(
+    #     ticket.__dict__, indent=4, sort_keys=True, default=str, ensure_ascii=False)
+    ticket_data = f"{ticket.name};{ticket.parkzone};{ticket.valid_after};{ticket.valid_before};{ticket.passport}"
+    print(ticket_data)
+    ticket_bytes = bytearray(ticket_data, 'utf-8')
     signature = private_key.sign(
     ticket_bytes,
     padding.PSS(
@@ -66,7 +69,7 @@ def get_ticket_qr_code(ticket):
     qr_code_image = qrcode.make(ticket_data_json)
     qr_code_image.save(qr_code_bytes, format='PNG')
     qr_code_bytes = qr_code_bytes.getvalue()
-    return qr_code_bytes
+    return qr_code_bytes, qr_code_image
 
 
 def get_ticket_qr_code_thumbnail(full_image):
@@ -77,6 +80,10 @@ def get_ticket_qr_code_thumbnail(full_image):
     qr_code_thumbnail = qr_code_thumbnail.getvalue()
     return qr_code_thumbnail
     
+def send_message(token, message, connection_socket, receiver, id):
+    echo_msg = create_text_message(
+                token, message, receiver, id)
+    connection_socket.sendall(bytes(echo_msg, 'utf-8'))
 
 if __name__ == '__main__':
     if (len(argv) < 4):
@@ -116,7 +123,14 @@ if __name__ == '__main__':
                 if encoded_msg:
                     msg = json.loads(encoded_msg)
                     # входящее сообщение от пользователя
-                    if msg.__contains__(ApiKeys.Sender):                  
+                    if msg.__contains__(ApiKeys.Sender):
+                        # 1. В какой парк?
+                        # а б в к
+                        # 2. А с кем?
+                        # а ю в ф
+                        question = "asd"
+                        receiver = msg[ApiKeys.Sender]
+                        send_message(auth_token, question, sock, receiver, OPAQUE)
                         person_ticket = sign_ticket(Ticket(signature=""), private_key)
                         ticket_data_json = json.dumps(
                             person_ticket.__dict__, indent=4, sort_keys=True, default=str, ensure_ascii=False)
@@ -127,10 +141,10 @@ if __name__ == '__main__':
                         OPAQUE += 1
                         
                         # make qr code
-                        qr_code = get_ticket_qr_code(person_ticket)
+                        qr_code, qr_image = get_ticket_qr_code(person_ticket)
 
                         # make thubmnail for qr code
-                        qr_code_thumbnail = get_ticket_qr_code_thumbnail(qr_code) 
+                        qr_code_thumbnail = get_ticket_qr_code_thumbnail(qr_image) 
                         
                        
 
