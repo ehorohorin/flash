@@ -37,9 +37,9 @@ resubber = sched.scheduler(time.time, time.sleep)
 
 
 def resub(sock, token):
-    msg = subscribe_to_messages(token, OPAQUE)
+    msg = subscribe_to_messages(token, '7746655173')
     print(msg)
-    print("Trying recconnect")
+    print("subscribing another time")
     sock.sendall(bytes(msg, 'utf-8'))
     t = threading.Timer(KEEP_ALIVE_TIME, resub, [sock, token])
     t.start()
@@ -64,7 +64,7 @@ def sign_ticket(ticket, private_key):
 def get_ticket_qr_code(ticket):
     ticket_data_json = json.dumps(
                     ticket.__dict__, indent=4, sort_keys=True, default=str, ensure_ascii=False)
-    ticket_data_json = gzip.compress(bytes(ticket_data_json, 'utf-8'))
+    # ticket_data_json = gzip.compress(bytes(ticket_data_json, 'utf-8'))
     qr_code_bytes = io.BytesIO()
     qr_code_image = qrcode.make(ticket_data_json)
     qr_code_image.save(qr_code_bytes, format='PNG')
@@ -98,7 +98,7 @@ if __name__ == '__main__':
     msg = subscribe_to_messages(auth_token, OPAQUE)
     print(msg)
     sock.sendall(bytes(msg, 'utf-8'))
-    OPAQUE += 1
+    # OPAQUE += 1
 
     key_file = open("private_key.rsa", "rb")
     private_key = serialization.load_pem_private_key(
@@ -106,6 +106,9 @@ if __name__ == '__main__':
         password=None,
         backend=default_backend()
     )
+
+    datafile = Data()
+    user_statuses = {}
 
     key_file.close()
     t = threading.Timer(KEEP_ALIVE_TIME, resub, [sock, auth_token])
@@ -123,36 +126,43 @@ if __name__ == '__main__':
                 if encoded_msg:
                     msg = json.loads(encoded_msg)
                     # входящее сообщение от пользователя
-                    if msg.__contains__(ApiKeys.Sender):
-                        # 1. В какой парк?
-                        # а б в к
-                        # 2. А с кем?
-                        # а ю в ф
-                        question = "asd"
-                        receiver = msg[ApiKeys.Sender]
-                        send_message(auth_token, question, sock, receiver, OPAQUE)
-                        person_ticket = sign_ticket(Ticket(signature=""), private_key)
-                        ticket_data_json = json.dumps(
-                            person_ticket.__dict__, indent=4, sort_keys=True, default=str, ensure_ascii=False)
-                        echo_msg = create_text_message(
-                            auth_token, ticket_data_json, msg[ApiKeys.Sender], OPAQUE)
-                        print(echo_msg)
-                        sock.sendall(bytes(echo_msg, 'utf-8'))
-                        OPAQUE += 1
-                        
-                        # make qr code
-                        qr_code, qr_image = get_ticket_qr_code(person_ticket)
+                    if msg.__contains__(ApiKeys.Sender):                 
+                        user = msg[ApiKeys.Sender]
+                        user_message = msg[ApiKeys.Text]
+                        try:
+                            user_step = len(user_statuses[user].keys())
+                        except KeyError:
+                            user_step = 0
+                            user_statuses[user] = {}
+                        try:
+                            user_statuses[user].update({user_step:user_message})
+                            user_dialog = datafile.questions[user_step]
+                            send_message(auth_token, user_dialog, sock, user, user_step)
+                        except IndexError:
+                            
+                            with open('data.txt', 'a', encoding='utf-8') as file:
+                                file.write(json.dumps(user_statuses, indent=4, sort_keys=True, default=str, ensure_ascii=False))
+                            user_dialog = datafile.custom_messages['sendqr']
+                            send_message(auth_token, user_dialog, sock, user, user_step)
+                            parkname = user_statuses[user][2].replace("1","Кавказский национальный заповедник").
+                            replace("2","Сочинский национальный парк").
+                            replace("3","Абхазская горная трасса").
+                            replace("4","Эверест")
+                            person_ticket = Ticket(name=user_statuses[user][4],
+                            valid_after=datetime.datetime.strptime(user_statuses[user][3], "DD.MM.YYYY"),
+                            valid_before=datetime.datetime.strptime(user_statuses[user][3], "DD.MM.YYYY") + datetime.timedelta(days=3),
+                            parkzone=parkname)
+                            qr_code, qr_image = get_ticket_qr_code(person_ticket)
+                            qr_code_thumbnail = get_ticket_qr_code_thumbnail(qr_image) 
+                            echo_image = create_image_message(auth_token, msg[ApiKeys.Sender], OPAQUE, qr_code,
+                                                            qr_code_thumbnail, ImageFormat.Png)
+                            sock.sendall(bytes(echo_image, 'utf-8'))
+                            user_dialog = "Вы купили билет. Начинаем заново!"
 
-                        # make thubmnail for qr code
-                        qr_code_thumbnail = get_ticket_qr_code_thumbnail(qr_image) 
+                            send_message(auth_token, user_dialog, sock, user, user_step)
+                            user_step = 0
+                            user_statuses[user] = {}                        
                         
-                       
-
-                        echo_image = create_image_message(auth_token, msg[ApiKeys.Sender], OPAQUE, qr_code,
-                                                          qr_code_thumbnail, ImageFormat.Png)
-                        
-                        OPAQUE += 1
-                        sock.sendall(bytes(echo_image, 'utf-8'))
                     # результат выполнения запроса
                     elif msg.__contains__(ApiKeys.OpaqueData):
                         # здесь можно обработать ошибки
