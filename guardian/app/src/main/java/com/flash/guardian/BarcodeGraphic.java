@@ -27,11 +27,16 @@ import com.google.android.gms.vision.barcode.Barcode;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.security.Signature;
+import java.security.SignatureException;
 import java.security.SignedObject;
 
 /**
@@ -40,14 +45,12 @@ import java.security.SignedObject;
  */
 public class BarcodeGraphic extends GraphicOverlay.Graphic {
 
-    private int mId;
-
+    private static final String TAG = "BarcodeGraphic";
     private static final int COLOR_CHOICES[] = {
             Color.GREEN
     };
-
     private static int mCurrentColorIndex = 0;
-
+    private int mId;
     private Paint mRectPaint;
     private Paint mTextPaint;
     private volatile Barcode mBarcode;
@@ -83,6 +86,16 @@ public class BarcodeGraphic extends GraphicOverlay.Graphic {
         return mBarcode;
     }
 
+//    http://java-online.ru/blog-signature.xhtml
+    private boolean verifySignedObject(final SignedObject obj, PublicKey key)
+            throws InvalidKeyException, SignatureException,
+            NoSuchAlgorithmException
+    {
+        // Verify the signed object
+        Signature signature = Signature.getInstance(key.getAlgorithm());
+        return obj.verify(key, signature);
+    }
+
     /**
      * Updates the barcode instance from the detection of the most recent frame.  Invalidates the
      * relevant portions of the overlay to trigger a redraw.
@@ -113,26 +126,43 @@ public class BarcodeGraphic extends GraphicOverlay.Graphic {
         Log.d("Barcode scaned", barcode.rawValue);
         String name = "";
 
+        //TODO инициализировать
+        SignedObject signedObject = null;
+//        PublicKey publicKey  = (PublicKey) readKey(FILE_public);
+        PublicKey publicKey  = null;
+
+
         try {
             jsonobj = new JSONObject(barcode.rawValue);
             name = jsonobj.getString("name");
-            Log.d("Barcode", jsonobj.getString("name"));
+            Log.d(TAG, jsonobj.getString("name"));
             Signature signature = Signature.getInstance("SHA256WithDSA");
 
             signature.initVerify(keyPair.getPublic());
+
+
+
             // Проверка подписанного объекта
             boolean verified = verifySignedObject(signedObject, publicKey);
-            System.out.println("Проверка подписи объекта : " + verified);
+            Log.d(TAG, "Проверка подписи объекта : " + verified);
 
             // Извлечение подписанного объекта
             String unsignedObject = (String) signedObject.getObject();
 
-            System.out.println("Исходный текст объекта : " + unsignedObject);
+            Log.d(TAG, "Исходный текст объекта : " + unsignedObject);
         } catch (JSONException e) {
             e.printStackTrace();
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         } catch (InvalidKeyException e) {
+            e.printStackTrace();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (SignatureException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
 
@@ -141,5 +171,15 @@ public class BarcodeGraphic extends GraphicOverlay.Graphic {
 //        canvas.drawText(barcode.rawValue, rect.left, rect.bottom, mTextPaint);
         canvas.drawText(name, rect.left, rect.bottom, mTextPaint);
 
+    }
+
+    private Object readKey(final String filePath)
+            throws FileNotFoundException,
+            IOException, ClassNotFoundException
+    {
+        FileInputStream fis = new FileInputStream(filePath);
+        ObjectInputStream ois = new ObjectInputStream(fis);
+        Object object = ois.readObject();
+        return object;
     }
 }
