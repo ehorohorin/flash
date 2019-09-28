@@ -54,6 +54,7 @@ class MainActivity : AppCompatActivity() {
                 Log.d("SCANNER READ", it)
                 try {
                     val data = Gson().fromJson(it, Ticket::class.java)
+                    Log.d("DATA TEST", data.name)
                     checkTicket(data)
                 } catch (e: Exception) {
                     zxing_barcode_scanner.resume()
