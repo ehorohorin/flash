@@ -27,6 +27,7 @@ import com.google.android.gms.vision.barcode.Barcode;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.security.Signature;
@@ -50,6 +51,7 @@ public class BarcodeGraphic extends GraphicOverlay.Graphic {
     private volatile Barcode mBarcode;
 
     private JSONObject jsonobj;
+    private KeyPair keyPair;
 
     BarcodeGraphic(GraphicOverlay overlay) {
         super(overlay);
@@ -115,13 +117,13 @@ public class BarcodeGraphic extends GraphicOverlay.Graphic {
             Log.d("Barcode", jsonobj.getString("name"));
             Signature signature = Signature.getInstance("SHA256WithDSA");
 
-
-
             signature.initVerify(keyPair.getPublic());
 
         } catch (JSONException e) {
             e.printStackTrace();
         } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (InvalidKeyException e) {
             e.printStackTrace();
         }
 
