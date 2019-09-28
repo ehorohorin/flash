@@ -27,6 +27,10 @@ import com.google.android.gms.vision.barcode.Barcode;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.security.KeyPair;
+import java.security.NoSuchAlgorithmException;
+import java.security.Signature;
+
 /**
  * Graphic instance for rendering barcode position, size, and ID within an associated graphic
  * overlay view.
@@ -109,7 +113,15 @@ public class BarcodeGraphic extends GraphicOverlay.Graphic {
             jsonobj = new JSONObject(barcode.rawValue);
             name = jsonobj.getString("name");
             Log.d("Barcode", jsonobj.getString("name"));
+            Signature signature = Signature.getInstance("SHA256WithDSA");
+
+
+
+            signature.initVerify(keyPair.getPublic());
+
         } catch (JSONException e) {
+            e.printStackTrace();
+        } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         }
 
