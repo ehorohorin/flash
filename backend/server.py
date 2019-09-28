@@ -12,7 +12,7 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives import serialization
-
+import datetime
 from api import create_text_message
 from api import subscribe_to_messages
 from api import create_image_message
@@ -24,10 +24,59 @@ from api import ApiKeys
 from api import ApiResult
 
 import gzip
-
-
+import threading
+import sched, time
 
 OPAQUE = 0
+KEEP_ALIVE_TIME = 120
+resubber = sched.scheduler(time.time, time.sleep)
+
+
+def resub(sock, token):
+    msg = subscribe_to_messages(token, OPAQUE)
+    print(msg)
+    print("Trying recconnect")
+    sock.sendall(bytes(msg, 'utf-8'))
+    t = threading.Timer(KEEP_ALIVE_TIME, resub, [sock, token])
+    t.start()
+
+
+def sign_ticket(ticket, private_key):
+    ticket_data_json = json.dumps(
+        ticket.__dict__, indent=4, sort_keys=True, default=str, ensure_ascii=False)
+
+    print("-----------------json---------------")
+    print(ticket_data_json)
+    ticket_bytes = bytearray(ticket_data_json, 'utf-8')
+    signature = private_key.sign(
+    ticket_bytes,
+    padding.PSS(
+        mgf=padding.MGF1(hashes.SHA256()),
+        salt_length=padding.PSS.MAX_LENGTH
+    ),
+    hashes.SHA256())
+    ticket.signature = signature.hex()
+    return ticket
+
+def get_ticket_qr_code(ticket):
+    ticket_data_json = json.dumps(
+                    ticket.__dict__, indent=4, sort_keys=True, default=str, ensure_ascii=False)
+    ticket_data_json = gzip.compress(bytes(ticket_data_json, 'utf-8'))
+    qr_code_bytes = io.BytesIO()
+    qr_code_image = qrcode.make(ticket_data_json)
+    qr_code_image.save(qr_code_bytes, format='PNG')
+    qr_code_bytes = qr_code_bytes.getvalue()
+    return qr_code_bytes
+
+
+def get_ticket_qr_code_thumbnail(full_image):
+    qr_code_thumbnail = io.BytesIO()
+    size = 512, 512
+    full_image.thumbnail(size)
+    full_image.save(qr_code_thumbnail, format='PNG')
+    qr_code_thumbnail = qr_code_thumbnail.getvalue()
+    return qr_code_thumbnail
+    
 
 if __name__ == '__main__':
     if (len(argv) < 4):
@@ -52,8 +101,8 @@ if __name__ == '__main__':
     )
 
     key_file.close()
-    
-
+    t = threading.Timer(KEEP_ALIVE_TIME, resub, [sock, auth_token])
+    t.start()
     while True:
         data = sock.recv(1024)
         
@@ -67,49 +116,25 @@ if __name__ == '__main__':
                 if encoded_msg:
                     msg = json.loads(encoded_msg)
                     # входящее сообщение от пользователя
-                    if msg.__contains__(ApiKeys.Sender):
-
-                        
-
-                        person_ticket = Ticket(signature="")
-                        
+                    if msg.__contains__(ApiKeys.Sender):                  
+                        person_ticket = sign_ticket(Ticket(signature=""), private_key)
                         ticket_data_json = json.dumps(
                             person_ticket.__dict__, indent=4, sort_keys=True, default=str, ensure_ascii=False)
-
-                        print("-----------------json---------------")
-                        print(ticket_data_json)
-                        ticket_bytes = bytearray(ticket_data_json, 'utf-8')
-                        signature = private_key.sign(
-                        ticket_bytes,
-                        padding.PSS(
-                            mgf=padding.MGF1(hashes.SHA256()),
-                            salt_length=padding.PSS.MAX_LENGTH
-                        ),
-                        hashes.SHA256())
-                        person_ticket.signature = signature.hex()
-                        ticket_data_json = json.dumps(
-                            person_ticket.__dict__, indent=4, sort_keys=True, default=str, ensure_ascii=False)
-                            
                         echo_msg = create_text_message(
                             auth_token, ticket_data_json, msg[ApiKeys.Sender], OPAQUE)
                         print(echo_msg)
                         sock.sendall(bytes(echo_msg, 'utf-8'))
                         OPAQUE += 1
-                        ticket_data_json = gzip.compress(bytes(ticket_data_json, 'utf-8'))
+                        
                         # make qr code
-                        qr_code_bytes = io.BytesIO()
-                        qr_code_image = qrcode.make(ticket_data_json)
-                        qr_code_image.save(qr_code_bytes, format='PNG')
-                        qr_code_bytes = qr_code_bytes.getvalue()
+                        qr_code = get_ticket_qr_code(person_ticket)
 
                         # make thubmnail for qr code
-                        qr_code_thumbnail = io.BytesIO()
-                        size = 512, 512
-                        qr_code_image.thumbnail(size)
-                        qr_code_image.save(qr_code_thumbnail, format='PNG')
-                        qr_code_thumbnail = qr_code_thumbnail.getvalue()
+                        qr_code_thumbnail = get_ticket_qr_code_thumbnail(qr_code) 
+                        
+                       
 
-                        echo_image = create_image_message(auth_token, msg[ApiKeys.Sender], OPAQUE, qr_code_bytes,
+                        echo_image = create_image_message(auth_token, msg[ApiKeys.Sender], OPAQUE, qr_code,
                                                           qr_code_thumbnail, ImageFormat.Png)
                         
                         OPAQUE += 1
