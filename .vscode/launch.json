@@ -8,7 +8,7 @@
             "name": "Python: Current File",
             "type": "python",
             "request": "launch",
-            "program": "${file}",
+            "program": "C:\\code\\flash\\backend\\server.py",
             "console": "integratedTerminal",
             "args": ["api.seraphim.online", "20013", "e18fd2e9cfa91559a9658bfe31e95160da755368f8e281b52945c6be48f3fdd7"]
         }
