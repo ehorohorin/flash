@@ -90,6 +90,7 @@ def send_message(token, message, connection_socket, receiver, id):
 
 
 def check_input(message, user_step):
+    errMsg = ""
     if user_step == 0:
         return True
     elif user_step == 1:
@@ -106,12 +107,14 @@ def check_input(message, user_step):
         try:
             date = datetime.datetime.strptime(message, "%d.%m.%Y")
             if date.date() < datetime.datetime.now().date():
+		errMsg="Выберите дату из будущего"
                 return False
             return True
         except ValueError:
             return False
     elif user_step == 4:
         if message.count(',') != 2:
+	    errMsg = "Используйте формат ввода (через запятую): Имя, паспортные данные"
             return False
         return True
     else:
