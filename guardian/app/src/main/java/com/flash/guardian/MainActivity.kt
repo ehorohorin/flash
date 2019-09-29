@@ -54,7 +54,7 @@ class MainActivity : AppCompatActivity() {
                 Log.d("SCANNER READ", it)
                 try {
                     val data = Gson().fromJson(it, Ticket::class.java)
-//                    Log.d("DATA TEST", data.name)
+                    Log.d("DATA TEST", data.name)
                     checkTicket(data)
                 } catch (e: Exception) {
                     zxing_barcode_scanner.resume()
@@ -70,8 +70,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun checkTicket(data: Ticket) {
         AlertDialog.Builder(this)
-            .setTitle("Билет")
-            .setMessage(if (data.valid) "Билет проверен" else "Билет недействителен!")
+            .setTitle("Билет проверен")
+            .setMessage(if (true) "Билет верный!\nИмя: "+data.name+"\nПаспорт: "+data.passport+"\nДействителен до: "+data.valid_before else "Билет недействителен!")
             .setCancelable(false)
             .setPositiveButton("OK") { _, _ ->
                 zxing_barcode_scanner.resume()
