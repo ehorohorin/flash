@@ -89,6 +89,35 @@ def send_message(token, message, connection_socket, receiver, id):
     connection_socket.sendall(bytes(echo_msg, 'utf-8'))
 
 
+def check_input(message, user_step):
+    if user_step == 0:
+        return True
+    elif user_step == 1:
+        try:
+            return message.isdigit() and int(message) < 5 and int(message) > 0
+        except ValueError:
+            return False
+    elif user_step == 2:
+        try:
+            return message.isdigit() and int(message) < 5 and int(message) > 0
+        except ValueError:
+            return False
+    elif user_step == 3:
+        try:
+            date = datetime.datetime.strptime(message, "%d.%m.%Y")
+            if date.date() < datetime.datetime.now().date():
+                return False
+            return True
+        except ValueError:
+            return False
+    elif user_step == 4:
+        if message.count(',') != 2:
+            return False
+        return True
+    else:
+        return True
+
+
 if __name__ == '__main__':
     if (len(argv) < 4):
         print("Нужно передать параметры: IP адрес, порт, токен")
@@ -138,42 +167,60 @@ if __name__ == '__main__':
                         except KeyError:
                             user_step = 0
                             user_statuses[user] = {}
-                        try:
-                            user_statuses[user].update(
-                                {user_step: user_message})
-                            user_dialog = datafile.questions[user_step]
+
+                        if check_input(user_message, user_step):
+                            try:
+                                user_statuses[user].update(
+                                    {user_step: user_message})
+                                user_dialog = datafile.questions[user_step]
+                                send_message(auth_token, user_dialog,
+                                             sock, user, user_step)
+                            except IndexError:
+
+                                with open('data.txt', 'a', encoding='utf-8') as file:
+                                    file.write(json.dumps(
+                                        user_statuses, indent=4, sort_keys=True, default=str, ensure_ascii=False))
+                                user_dialog = datafile.custom_messages['sendqr']
+                                send_message(auth_token, user_dialog,
+                                             sock, user, user_step)
+                                parkname = user_statuses[user][1].replace("1", "Кавказский национальный заповедник").replace(
+                                    "2", "Сочинский национальный парк").replace("3", "Абхазская горная трасса").replace("4", "Эверест")
+                                user_ticket_choice = user_statuses[user][2].replace("1", "Экскурсия по самым непроходимым и проходимым местам").replace(
+                                    "2", "Свободное путешествие").replace("3", "Увлекательный туристический маршрут").replace("4", "Фотосессия в  живописных уголках парка")
+                                passport_parsed = user_statuses[user][4].split(',')[
+                                    1].replace(' ', '')
+                                person_ticket = Ticket(name=user_statuses[user][4],
+                                                       valid_after=datetime.datetime.strptime(
+                                    user_statuses[user][3], "%d.%m.%Y"),
+                                    valid_before=datetime.datetime.strptime(
+                                    user_statuses[user][3], "%d.%m.%Y") + datetime.timedelta(days=3),
+                                    parkzone=parkname, passport=passport_parsed,
+                                    ticket_type=user_ticket_choice)
+                                qr_code, qr_image = get_ticket_qr_code(
+                                    person_ticket)
+                                qr_code_thumbnail = get_ticket_qr_code_thumbnail(
+                                    qr_image)
+                                echo_image = create_image_message(auth_token, msg[ApiKeys.Sender], OPAQUE, qr_code,
+                                                                  qr_code_thumbnail, ImageFormat.Png)
+                                sock.sendall(bytes(echo_image, 'utf-8'))
+                                # user_dialog = """Шаг 5. Осталось перевести мешок золота на этот счет - 4536 3121 3131 3213.
+                                # Шучу, это же PoC. Сейчас прилетит билет"""
+                                # send_message(auth_token, user_dialog,
+                                #              sock, user, user_step)
+                                date_after = person_ticket.valid_after.strftime(
+                                    "%m-%d-%Y")
+                                date_before = person_ticket.valid_before.strftime(
+                                    "%m-%d-%Y")
+                                user_dialog = f"Ура, вы купили билет.\nВаши данные:\n{person_ticket.name}\nМесто: {person_ticket.parkzone}\nТип билета: {person_ticket.ticket_type}\nДаты поездки: {date_after} - {date_before}\nВозьмите билет еще и другу!"
+
+                                send_message(auth_token, user_dialog,
+                                             sock, user, user_step)
+                                user_step = 0
+                                user_statuses[user] = {}
+                        else:
+                            user_dialog = "Вы что-то вели неправильно, попробуйте еще раз"
                             send_message(auth_token, user_dialog,
                                          sock, user, user_step)
-                        except IndexError:
-
-                            with open('data.txt', 'a', encoding='utf-8') as file:
-                                file.write(json.dumps(
-                                    user_statuses, indent=4, sort_keys=True, default=str, ensure_ascii=False))
-                            user_dialog = datafile.custom_messages['sendqr']
-                            send_message(auth_token, user_dialog,
-                                         sock, user, user_step)
-                            parkname = user_statuses[user][2].replace("1", "Кавказский национальный заповедник").replace(
-                                "2", "Сочинский национальный парк").replace("3", "Абхазская горная трасса").replace("4", "Эверест")
-                            person_ticket = Ticket(name=user_statuses[user][4],
-                                                   valid_after=datetime.datetime.strptime(
-                                                       user_statuses[user][3], "%d.%m.%Y"),
-                                                   valid_before=datetime.datetime.strptime(
-                                                       user_statuses[user][3], "%d.%m.%Y") + datetime.timedelta(days=3),
-                                                   parkzone=parkname)
-                            qr_code, qr_image = get_ticket_qr_code(
-                                person_ticket)
-                            qr_code_thumbnail = get_ticket_qr_code_thumbnail(
-                                qr_image)
-                            echo_image = create_image_message(auth_token, msg[ApiKeys.Sender], OPAQUE, qr_code,
-                                                              qr_code_thumbnail, ImageFormat.Png)
-                            sock.sendall(bytes(echo_image, 'utf-8'))
-                            user_dialog = "Вы купили билет. Начинаем заново!"
-
-                            send_message(auth_token, user_dialog,
-                                         sock, user, user_step)
-                            user_step = 0
-                            user_statuses[user] = {}
-
                     # результат выполнения запроса
                     elif msg.__contains__(ApiKeys.OpaqueData):
                         # здесь можно обработать ошибки

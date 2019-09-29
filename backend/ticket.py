@@ -5,11 +5,12 @@ class Ticket:
     def __init__(self, name="Василий Иванович Сидоров",
                  valid_after=datetime.datetime.now(), valid_before=datetime.datetime.now() + datetime.timedelta(days=3),
                  parkzone="Волшебная дубрава", signature="f9fb00138b33c7387b7809c9610a0290d50de48e2aeedcebd1373cb6c8a403e8", 
-                 passport="1234567890"):
+                 passport="1234567890", ticket_type="Обычный билет"):
         self.name = name
         self.valid_after = valid_after
         self.valid_before = valid_before
         self.parkzone = parkzone
+        self.ticket_type = ticket_type
         self.signature = signature
         self.passport = passport
 
