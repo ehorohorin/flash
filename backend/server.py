@@ -90,35 +90,40 @@ def send_message(token, message, connection_socket, receiver, id):
 
 
 def check_input(message, user_step):
-    errMsg = ""
+    input_valid = False
     if user_step == 0:
-        return True
+        input_valid = True
     elif user_step == 1:
         try:
-            return message.isdigit() and int(message) < 5 and int(message) > 0
+            input_valid = message.isdigit() and int(message) < 5 and int(message) > 0 and len(message) == 1
         except ValueError:
-            return False
+            input_valid = False
     elif user_step == 2:
         try:
-            return message.isdigit() and int(message) < 5 and int(message) > 0
+            input_valid = message.isdigit() and int(message) < 5 and int(message) > 0 and len(message) == 1
         except ValueError:
-            return False
+            input_valid = False
     elif user_step == 3:
         try:
             date = datetime.datetime.strptime(message, "%d.%m.%Y")
             if date.date() < datetime.datetime.now().date():
-		errMsg="Выберите дату из будущего"
-                return False
-            return True
+                input_valid = False
+            else:
+                input_valid = True
         except ValueError:
-            return False
+            input_valid = False
     elif user_step == 4:
-        if message.count(',') != 2:
-	    errMsg = "Используйте формат ввода (через запятую): Имя, паспортные данные"
-            return False
-        return True
+        try:
+            passport = message.split(',')[1].replace(' ', '')
+            if message.count(',') != 1 or len(passport) != 10 or not passport.isdigit():
+                input_valid = False
+            else:
+                input_valid = True
+        except ValueError:
+            input_valid = False
     else:
-        return True
+        input_valid = True
+    return input_valid
 
 
 if __name__ == '__main__':
@@ -190,10 +195,11 @@ if __name__ == '__main__':
                                     "2", "Сочинский национальный парк").replace("3", "Абхазская горная трасса").replace("4", "Эверест")
                                 user_ticket_choice = user_statuses[user][2].replace("1", "Экскурсия по самым непроходимым и проходимым местам").replace(
                                     "2", "Свободное путешествие").replace("3", "Увлекательный туристический маршрут").replace("4", "Фотосессия в  живописных уголках парка")
-                                passport_parsed = user_statuses[user][4].split(',')[
-                                    1].replace(' ', '')
-                                person_ticket = Ticket(name=user_statuses[user][4],
-                                                       valid_after=datetime.datetime.strptime(
+                                passport_parsed = "******" + user_statuses[user][4].split(',')[
+                                    1].replace(' ', '')[:-4] 
+                                person_ticket = Ticket(name=user_statuses[user][4].split(',')[
+                                    0].replace(' ', ''),
+                                    valid_after=datetime.datetime.strptime(
                                     user_statuses[user][3], "%d.%m.%Y"),
                                     valid_before=datetime.datetime.strptime(
                                     user_statuses[user][3], "%d.%m.%Y") + datetime.timedelta(days=3),
@@ -211,10 +217,10 @@ if __name__ == '__main__':
                                 # send_message(auth_token, user_dialog,
                                 #              sock, user, user_step)
                                 date_after = person_ticket.valid_after.strftime(
-                                    "%m-%d-%Y")
+                                    "%d.%m.%Y")
                                 date_before = person_ticket.valid_before.strftime(
-                                    "%m-%d-%Y")
-                                user_dialog = f"Ура, вы купили билет.\nВаши данные:\n{person_ticket.name}\nМесто: {person_ticket.parkzone}\nТип билета: {person_ticket.ticket_type}\nДаты поездки: {date_after} - {date_before}\nВозьмите билет еще и другу!"
+                                    "%d.%m.%Y")
+                                user_dialog = f"Ура, вы купили билет.\nВаши данные:\nФИО: {person_ticket.name}\nПаспорт: {person_ticket.passport}\nМесто: {person_ticket.parkzone}\nТип билета: {person_ticket.ticket_type}\nДаты поездки: {date_after} - {date_before}\nВозьмите билет еще и другу!"
 
                                 send_message(auth_token, user_dialog,
                                              sock, user, user_step)
